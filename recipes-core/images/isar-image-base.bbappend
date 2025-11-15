@@ -3,12 +3,12 @@
 do_rootfs_prepare[stamp-extra-info] = "${@bb.utils.sha256_file('${LOCAL_APT_REPO}/dists/bookworm/Release') if os.path.exists('${LOCAL_APT_REPO}/dists/bookworm/Release') else 'no-repo'}"
 
 # Mount local APT repo into chroot so APT can access file:// repository during do_rootfs_install
-# The repo is already accessible in the kas container at /repo/isar-yocto-hybrid-demo/integration/local-apt
+# The repo is already accessible in the kas container at /repo/integration/local-apt
 # We just need to make it accessible from inside the chroot
 rootfs_do_mounts:append() {
     # Mount local APT repo so file:// repository is accessible from inside chroot
     LOCAL_APT_REPO_PATH=$(echo "${LOCAL_APT_REPO}" | sed 's|^file://||')
-    MOUNT_POINT="${ROOTFSDIR}/repo/isar-yocto-hybrid-demo/integration/local-apt"
+    MOUNT_POINT="${ROOTFSDIR}${LOCAL_APT_REPO_PATH}"
     
     if [ -d "${LOCAL_APT_REPO_PATH}" ]; then
         # Create the mount point directory itself (mount --bind requires the destination to exist)
@@ -26,8 +26,10 @@ rootfs_do_mounts:append() {
 
 # Unmount local APT repo after rootfs operations
 rootfs_do_umounts:prepend() {
-    if mountpoint -q "${ROOTFSDIR}/repo/isar-yocto-hybrid-demo/integration/local-apt" 2>/dev/null; then
-        sudo umount "${ROOTFSDIR}/repo/isar-yocto-hybrid-demo/integration/local-apt" || true
+    LOCAL_APT_REPO_PATH=$(echo "${LOCAL_APT_REPO}" | sed 's|^file://||')
+    MOUNT_POINT="${ROOTFSDIR}${LOCAL_APT_REPO_PATH}"
+    if mountpoint -q "${MOUNT_POINT}" 2>/dev/null; then
+        sudo umount "${MOUNT_POINT}" || true
     fi
 }
 
