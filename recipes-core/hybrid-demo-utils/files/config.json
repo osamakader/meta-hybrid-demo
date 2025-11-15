@@ -1,0 +1,26 @@
+{
+    "application": {
+        "name": "Hybrid Demo",
+        "version": "1.0.0",
+        "description": "Yocto-built application running on ISAR"
+    },
+    "features": {
+        "json_parsing": true,
+        "cmake_build": true,
+        "hybrid_approach": true
+    },
+    "build_info": {
+        "build_system": "Yocto",
+        "target_system": "ISAR",
+        "architecture": "arm64"
+    },
+    "demo_data": {
+        "items": [
+            "C++ Application",
+            "CMake Build System",
+            "JSON Configuration",
+            "Hybrid Yocto/ISAR Build"
+        ]
+    }
+}
+

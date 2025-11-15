@@ -1,0 +1,72 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Hybrid Demo <hybrid-demo@example.com>
+Date: Fri, 15 Nov 2025 00:00:00 +0000
+Subject: [PATCH] modprobe: Add --all and --set-version long option support
+
+Add --all and --set-version long options to BusyBox's modprobe to support
+initramfs-tools and other tools that require these options:
+- --all maps to -a (which already exists and loads multiple modules)
+- --set-version allows specifying kernel version instead of using uname
+
+Signed-off-by: Hybrid Demo <hybrid-demo@example.com>
+---
+ modutils/modprobe.c | 28 +++++++++++++++++++++++++---
+ 1 file changed, 25 insertions(+), 3 deletions(-)
+
+diff --git a/modutils/modprobe.c b/modutils/modprobe.c
+index 0000000..1111111 100644
+--- a/modutils/modprobe.c
++++ b/modutils/modprobe.c
+@@ -151,7 +151,8 @@
+ #if ENABLE_LONG_OPTS
+ static const char modprobe_longopts[] ALIGN1 =
+ 	/* nobody asked for long opts (yet) */
+-	// "all\0"          No_argument "a"
++	"all\0"          No_argument "a"
++	"set-version\0"  Required_argument "\xfe"
+ 	// "list\0"         No_argument "l"
+ 	// "remove\0"       No_argument "r"
+ 	// "quiet\0"        No_argument "q"
+@@ -559,9 +559,35 @@
+ 	int rc;
+ 	unsigned opt;
+ 	struct module_entry *me;
++	#if ENABLE_LONG_OPTS
++		char *custom_version = NULL;
++		int i;
++	#endif
+ 
+ 	INIT_G();
+ 
++	#if ENABLE_LONG_OPTS
++		/* Parse --set-version manually - just extract value, don't modify argv */
++		/* This avoids segfaults from memmove and works with getopt32long */
++		for (i = 1; argv[i] != NULL; i++) {
++			if (strncmp(argv[i], "--set-version=", 14) == 0) {
++				custom_version = argv[i] + 14;
++				break;
++			} else if (strcmp(argv[i], "--set-version") == 0 && argv[i + 1] != NULL) {
++				custom_version = argv[i + 1];
++				break;
++			}
++		}
++	#endif
++
+ 	opt = getopt32long(argv, "^" INSMOD_OPTS MODPROBE_OPTS "\0" MODPROBE_COMPLEMENTARY,
+ 			modprobe_longopts
+ 			INSMOD_ARGS
+@@ -571,6 +597,12 @@
+ 	/* Goto modules location */
+ 	xchdir(CONFIG_DEFAULT_MODULES_DIR);
+ 	uname(&G.uts);
++	#if ENABLE_LONG_OPTS
++		if (custom_version) {
++			strncpy(G.uts.release, custom_version, sizeof(G.uts.release) - 1);
++			G.uts.release[sizeof(G.uts.release) - 1] = '\0';
++		}
++	#endif
+ 	xchdir(G.uts.release);
+ 
+ 	if (opt & OPT_LIST_ONLY) {
+-- 
+2.34.1

@@ -1,0 +1,48 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Hybrid Demo <hybrid-demo@example.com>
+Date: Fri, 14 Nov 2025 21:00:00 +0000
+Subject: [PATCH] addgroup: Add --quiet option support
+
+Add --quiet option to BusyBox's addgroup to support udev and other
+tools that require this option. The option is recognized and parsed
+but doesn't suppress output yet (compatible with udev's usage).
+
+Signed-off-by: Hybrid Demo <hybrid-demo@example.com>
+---
+ loginutils/addgroup.c | 4 ++++
+ 1 file changed, 4 insertions(+)
+
+diff --git a/loginutils/addgroup.c b/loginutils/addgroup.c
+index 0000000..1111111 100644
+--- a/loginutils/addgroup.c
++++ b/loginutils/addgroup.c
+@@ -46,7 +46,8 @@
+ #endif
+ 
+ #define OPT_GID                       (1 << 0)
+ #define OPT_SYSTEM_ACCOUNT            (1 << 1)
++#define OPT_QUIET                     (1 << 2)
+ 
+ static void xgroup_study(struct group *g)
+ {
+@@ -129,6 +130,7 @@
+ static const char addgroup_longopts[] ALIGN1 =
+ 		"gid\0"                 Required_argument "g"
+ 		"system\0"              No_argument       "S"
++		"quiet\0"               No_argument       "q"
+ 		;
+ 
+ /*
+@@ -160,7 +162,7 @@
+ #if ENABLE_FEATURE_ADDUSER_TO_GROUP
+ 	opts =
+ #endif
+-	getopt32long(argv, "^" "g:S" "\0" "-1:?2", addgroup_longopts,
++	getopt32long(argv, "^" "g:Sq" "\0" "-1:?2", addgroup_longopts,
+ 				&gid
+ 	);
+ 	/* move past the commandline options */
+-- 
+2.34.1
+
+
